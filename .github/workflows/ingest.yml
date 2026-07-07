@@ -1,0 +1,29 @@
+name: Signal Ingestion Worker
+
+# M0: manual trigger only. The schedule gets uncommented in M6, once the
+# worker does real work and Supabase/Anthropic secrets are wired up as
+# GitHub Actions secrets. Running an empty stub on a schedule has no value
+# yet, so we start with workflow_dispatch (manual "Run workflow" button).
+on:
+  workflow_dispatch: {}
+  # schedule:
+  #   - cron: "0 */6 * * *"   # every 6 hours — enabled in M6
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run worker
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

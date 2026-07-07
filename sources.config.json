@@ -1,0 +1,27 @@
+{
+  "domains": {
+    "page-screen-builders": {
+      "label": "Page / Screen Builders",
+      "active": true,
+      "sources": [
+        { "name": "Webflow Updates", "type": "changelog", "url": "https://webflow.com/updates" },
+        { "name": "Webflow Blog", "type": "blog", "url": "https://webflow.com/blog" },
+        { "name": "Framer Updates", "type": "changelog", "url": "https://www.framer.com/updates/" },
+        { "name": "Wix Studio Blog", "type": "blog", "url": "https://www.wix.com/studio/blog" },
+        { "name": "Builder.io Blog", "type": "blog", "url": "https://www.builder.io/blog" },
+        { "name": "r/webflow", "type": "reddit", "url": "https://www.reddit.com/r/webflow" },
+        { "name": "r/framer", "type": "reddit", "url": "https://www.reddit.com/r/framer" }
+      ]
+    },
+    "form-builders": {
+      "label": "Form Builders",
+      "active": false,
+      "sources": []
+    },
+    "app-builders": {
+      "label": "App Builders (low-code / vibe coding)",
+      "active": false,
+      "sources": []
+    }
+  }
+}
