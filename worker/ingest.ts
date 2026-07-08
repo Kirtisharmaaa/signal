@@ -8,6 +8,7 @@
  * M0: reads the source config and the DB connection status, does nothing
  * else yet. M1 adds real fetching. M2 adds real synthesis.
  */
+
 import sourcesConfig from "../sources.config.json";
 import { synthesizeDigest, type RawItem } from "../lib/agent";
 import { pingDb } from "../lib/db";
