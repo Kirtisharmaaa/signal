@@ -16,3 +16,9 @@ Kept short and dated — one entry per real decision, not a diary.
   dependency entirely is simpler anyway (no build-time network call).
 - Domains: page/screen builders (active first), form builders and app
   builders added later once the pipeline is proven on one domain.
+
+  **2026-07-08 — Fixed worker env loading**
+- `dotenv` inside the script loaded too late (imports run before other
+  code, so `lib/db.ts` checked for env vars before dotenv set them).
+- Fixed with Node's built-in `--env-file` flag in the `worker` script
+  instead — loads before the script starts, no timing issue.
