@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "worker": "tsx --env-file=.env.local worker/ingest.ts"
+    "worker": "NODE_OPTIONS='--max-http-header-size=100000' tsx --env-file=.env.local worker/ingest.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",

@@ -154,3 +154,25 @@ Added for later (M1.5+, once page/screen builders are working end-to-end):
 | r/vibecoding, r/replit | community | fast-growing, high-signal on real usage pain points |
 
 Worth flagging: this space moves faster and is noisier than page builders — lots of funding/valuation news, credit-pricing complaints, and marketing content mixed in with real product updates. That's actually a good stress test for the synthesis agent's judgment in M2 (does it distinguish "shipped a feature" from "raised a round"), but it's also more likely to produce noisy digests early on — worth expecting some tuning here.
+
+## 7. Source roadmap — by signal quality, not by website
+
+Sources aren't just "which websites" — they're different *kinds* of
+product intelligence, and each kind needs a different fetching approach
+with very different difficulty. This roadmap orders additions by how
+hard each is to actually build, not by how valuable the signal is.
+
+| Category | Signal it captures | Fetch difficulty | Status |
+|---|---|---|---|
+| Blog/changelog pages | What actually shipped | Medium — plain HTML, no auth, fragile if a site redesigns | **Active (M1)**, whole-page only for now |
+| GitHub Releases | Official version history | Easy — free, official API, no approval wall | Next up after M1 proves the pipeline |
+| Hacker News | Technical community reaction | Easy — free, official API, no auth | Next up alongside GitHub |
+| RSS-based news (TechCrunch, VentureBeat, etc.) | Industry context — funding, launches, acquisitions | Medium — RSS usually exists for news sites, unlike company blogs | Later, once GitHub/HN are working |
+| Reddit | Honest user feedback | **Blocked** — registration page broken as of July 2026, see decisions.md | Revisit later, or skip |
+| Product Hunt | New entrants, positioning | Medium-hard — needs registered API access, similar friction to Reddit | Deferred |
+| Discord / Slack communities | Real usage problems, practitioner talk | Hard — needs a bot installed inside someone else's server, a different category of effort | Deferred indefinitely |
+| G2 / Capterra | Comparison trends, reviews | Hard — actively scraper-hostile | Probably out of scope for a solo project |
+
+The pattern so far: start with whatever's easiest and free, prove the
+pipeline works, then add the next-easiest thing — never jump straight to
+the hardest source just because it'd be the most valuable one.

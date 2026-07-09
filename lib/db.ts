@@ -8,6 +8,7 @@
  * M0: connection check only, no tables yet.
  * M1 adds the raw_items table. M2 adds digests. M3 adds embeddings.
  */
+import type { FetchedItem } from "./fetchPage";
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.SUPABASE_URL;
@@ -34,4 +35,18 @@ export async function pingDb(): Promise<{ ok: boolean; message: string }> {
   } catch (err) {
     return { ok: false, message: err instanceof Error ? err.message : String(err) };
   }
+}
+
+export async function saveItems(items: FetchedItem[]): Promise<{ inserted: number }> {
+  if (items.length === 0) return { inserted: 0 };
+
+  const db = getDb();
+  const { data, error } = await db
+    .from("raw_items")
+    .upsert(items, { onConflict: "source_name,content_hash", ignoreDuplicates: true })
+    .select();
+
+  if (error) throw new Error(`Failed to save items: ${error.message}`);
+
+  return { inserted: data?.length ?? 0 };
 }
