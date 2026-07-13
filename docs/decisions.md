@@ -51,3 +51,14 @@ Kept short and dated — one entry per real decision, not a diary.
 - Still only testing 1 of 7 sources (Webflow Updates). Next: enable the
   remaining blog/changelog sources one at a time.
 
+**2026-07-13 — M1 complete: all 5 fetchable sources working**
+- Enabled all non-Reddit sources (Webflow Updates, Webflow Blog, Framer
+  Updates, Wix Studio Blog, Builder.io Blog) via a loop instead of one
+  hardcoded test source.
+- All 5 fetched successfully on first try — no further header-size or
+  network issues beyond the one already fixed.
+- Confirmed change detection works for real: Webflow Updates' content
+  changed between July 9 and July 13, and the worker correctly saved a
+  new row instead of silently missing it.
+- M1 core objective met: real fetch -> dedupe -> store, working across
+  multiple real sources, not just one.

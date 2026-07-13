@@ -33,21 +33,26 @@ async function main() {
   for (const [domainKey, domain] of activeDomains) {
     console.log(`\n--- Domain: ${domain.label} (${domainKey}) ---`);
 
-    // M1 test: just the first source, to prove the pipeline before scaling up.
-    const testSource = domain.sources[0];
-    console.log(`Fetching ${testSource.name} (test source only)...`);
+// Skip Reddit sources — registration blocked, see decisions.md.
+    const fetchableSources = domain.sources.filter((s) => s.type !== "reddit");
 
-    try {
-      const item = await fetchPageAsItem(testSource.url, domainKey, testSource.name);
-      const result = await saveItems([item]);
-      console.log(`  -> saved ${result.inserted} new (0 means unchanged since last run)`);
-    } catch (err) {
-      console.error(`  -> failed: ${err instanceof Error ? err.message : err}`);
-      if (err instanceof Error && err.cause) console.error(`     cause: ${err.cause}`);
+    for (const source of fetchableSources) {
+      console.log(`Fetching ${source.name}...`);
+      try {
+        const item = await fetchPageAsItem(source.url, domainKey, source.name);
+        const result = await saveItems([item]);
+        console.log(`  -> saved ${result.inserted} new (0 means unchanged since last run)`);
+      } catch (err) {
+        console.error(`  -> failed: ${err instanceof Error ? err.message : err}`);
+        if (err instanceof Error && err.cause) console.error(`     cause: ${err.cause}`);
+      }
     }
 
-    const remaining = domain.sources.length - 1;
-    console.log(`(${remaining} other source(s) not yet enabled — one at a time)`);
+    const skippedReddit = domain.sources.length - fetchableSources.length;
+    if (skippedReddit > 0) {
+      console.log(`(${skippedReddit} Reddit source(s) skipped — see decisions.md)`);
+    }
+
 
     const fakeItems: RawItem[] = [];
     const digest = await synthesizeDigest(domainKey, fakeItems);
