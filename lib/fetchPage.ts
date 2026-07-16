@@ -6,6 +6,7 @@ export interface FetchedItem {
   url: string;
   title: string;
   content_hash: string;
+  raw_html: string;
 }
 
 export async function fetchPageAsItem(
@@ -30,5 +31,6 @@ export async function fetchPageAsItem(
     url: pageUrl,
     title: sourceName,
     content_hash: contentHash,
+    raw_html: html,
   };
 }
