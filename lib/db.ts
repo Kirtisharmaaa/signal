@@ -8,6 +8,7 @@
  * M0: connection check only, no tables yet.
  * M1 adds the raw_items table. M2 adds digests. M3 adds embeddings.
  */
+import type { Digest } from "./agent";
 import type { FetchedItem } from "./fetchPage";
 import { createClient } from "@supabase/supabase-js";
 
@@ -49,4 +50,64 @@ export async function saveItems(items: FetchedItem[]): Promise<{ inserted: numbe
   if (error) throw new Error(`Failed to save items: ${error.message}`);
 
   return { inserted: data?.length ?? 0 };
+}
+export async function saveDigest(digest: Digest, embedding?: number[]): Promise<void> {
+  const db = getDb();
+  const { error } = await db.from("digests").insert({
+    domain: digest.domain,
+    summary: digest.summary,
+    item_count: digest.itemCount,
+    generated_at: digest.generatedAt,
+    ...(embedding ? { embedding: JSON.stringify(embedding) } : {}),
+  });
+
+  if (error) throw new Error(`Failed to save digest: ${error.message}`);
+}
+
+export async function getRecentDigests(
+  domain: string,
+  limit: number = 3
+): Promise<{ summary: string }[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("summary")
+    .eq("domain", domain)
+    .order("generated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`Failed to fetch recent digests: ${error.message}`);
+  return data ?? [];
+}
+export async function findSimilarDigests(
+  embedding: number[],
+  limit: number = 5,
+  threshold: number = 0.3
+): Promise<{ id: number; domain: string; summary: string; generated_at: string; similarity: number }[]> {
+  const db = getDb();
+  const { data, error } = await db.rpc("match_digests", {
+    query_embedding: embedding,
+    match_threshold: threshold,
+    match_count: limit,
+  });
+
+  if (error) throw new Error(`Vector search failed: ${error.message}`);
+  return data ?? [];
+}
+export async function getDigests(limit: number = 20): Promise<{
+  id: number;
+  domain: string;
+  summary: string;
+  item_count: number;
+  generated_at: string;
+}[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("id, domain, summary, item_count, generated_at")
+    .order("generated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`Failed to fetch digests: ${error.message}`);
+  return data ?? [];
 }

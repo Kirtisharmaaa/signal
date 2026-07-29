@@ -1,50 +1,66 @@
-const domains = [
-  { label: "Page / Screen Builders", status: "active" },
-  { label: "Form Builders", status: "planned" },
-  { label: "App Builders (low-code / vibe coding)", status: "planned" },
-];
+import { getDigests } from "@/lib/db";
+import Chat from "./components/chat";
 
-export default function Home() {
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
+function cleanSummary(text: string) {
+  return text
+    .replace(/^#+\s+/gm, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .trim();
+}
+
+export default async function Home() {
+  const digests = await getDigests(20);
+
   return (
-    <main className="flex-1 flex items-center justify-center px-6">
-      <div className="max-w-md w-full">
-        <p className="text-xs uppercase tracking-widest text-neutral-400 mb-3">
-          M0 — Foundations
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 mb-2">
-          Signal
-        </h1>
-        <p className="text-neutral-500 mb-10">
-          A product-intelligence agent that watches builder tools and turns
-          the noise into digests worth reading.
-        </p>
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-gray-100 px-8 py-5">
+        <h1 className="text-lg font-semibold tracking-tight">Signal</h1>
+        <p className="text-sm text-gray-500 mt-1">Product intelligence for builder tools</p>
+      </header>
 
-        <ul className="space-y-3">
-          {domains.map((d) => (
-            <li
-              key={d.label}
-              className="flex items-center justify-between border-b border-neutral-100 pb-3"
-            >
-              <span className="text-sm text-neutral-700">{d.label}</span>
-              <span
-                className={
-                  "text-xs px-2 py-0.5 rounded-full font-medium " +
-                  (d.status === "active"
-                    ? "bg-neutral-900 text-white"
-                    : "bg-neutral-100 text-neutral-400")
-                }
-              >
-                {d.status}
-              </span>
-            </li>
-          ))}
-        </ul>
+      <main className="max-w-6xl mx-auto px-8 py-8 grid grid-cols-[1fr_380px] gap-10">
+        <section>
+          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-5">
+            Latest Digests
+          </h2>
+          {digests.length === 0 ? (
+            <p className="text-sm text-gray-400">No digests yet — run the worker to generate some.</p>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {digests.map((digest) => (
+                <article
+                  key={digest.id}
+                  className="border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                      {digest.domain}
+                    </span>
+                    <span className="text-xs text-gray-400">{formatDate(digest.generated_at)}</span>
+                    <span className="text-xs text-gray-400">· {digest.item_count} sources</span>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {cleanSummary(digest.summary)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
-        <p className="text-xs text-neutral-400 mt-10">
-          The dashboard and chat land in later milestones. This page just
-          proves the app is deployed and talking to the repo.
-        </p>
-      </div>
-    </main>
+        <aside className="sticky top-8 self-start">
+          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-5">
+            Ask the agent
+          </h2>
+          <Chat />
+        </aside>
+      </main>
+    </div>
   );
 }

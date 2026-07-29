@@ -1,22 +1,13 @@
 /**
  * worker/ingest.ts
- *
- * The background process — this is the piece that runs on a schedule
- * (via GitHub Actions, wired up in M6) rather than in response to a request.
- * Run it manually for now: npm run worker
- *
- * M0: reads the source config and the DB connection status, does nothing
- * else yet. M1 adds real fetching. M2 adds real synthesis.
- * new after m1
- * 
- * worker/ingest.ts
- * The background process — proves fetching + saving work end to end (M1).
-
+ * M1: fetches real pages and saves raw HTML to Postgres.
+ * M2: passes fetched items to Claude, saves the resulting digest.
+ * M3: fetches past digests as memory context, generates and stores embeddings.
  */
 import sourcesConfig from "../sources.config.json";
-import { synthesizeDigest, type RawItem } from "../lib/agent";
-import { pingDb, saveItems } from "../lib/db";
-import { fetchPageAsItem } from "../lib/fetchPage";
+import { synthesizeDigest, generateEmbedding } from "../lib/agent";
+import { pingDb, saveItems, saveDigest, getRecentDigests } from "../lib/db";
+import { fetchPageAsItem, type FetchedItem } from "../lib/fetchPage";
 
 async function main() {
   console.log("=== Signal worker — starting ingestion run ===");
@@ -33,8 +24,8 @@ async function main() {
   for (const [domainKey, domain] of activeDomains) {
     console.log(`\n--- Domain: ${domain.label} (${domainKey}) ---`);
 
-// Skip Reddit sources — registration blocked, see decisions.md.
     const fetchableSources = domain.sources.filter((s) => s.type !== "reddit");
+    const collectedItems: FetchedItem[] = [];
 
     for (const source of fetchableSources) {
       console.log(`Fetching ${source.name}...`);
@@ -42,6 +33,7 @@ async function main() {
         const item = await fetchPageAsItem(source.url, domainKey, source.name);
         const result = await saveItems([item]);
         console.log(`  -> saved ${result.inserted} new (0 means unchanged since last run)`);
+        collectedItems.push(item);
       } catch (err) {
         console.error(`  -> failed: ${err instanceof Error ? err.message : err}`);
         if (err instanceof Error && err.cause) console.error(`     cause: ${err.cause}`);
@@ -53,10 +45,22 @@ async function main() {
       console.log(`(${skippedReddit} Reddit source(s) skipped — see decisions.md)`);
     }
 
+    // M3: load past digests so Claude doesn't repeat itself
+    const recentDigests = await getRecentDigests(domainKey, 3);
+    const recentSummaries = recentDigests.map((d) => d.summary);
+    if (recentSummaries.length > 0) {
+      console.log(`Memory: found ${recentSummaries.length} past digest(s) to pass as context`);
+    }
 
-    const fakeItems: RawItem[] = [];
-    const digest = await synthesizeDigest(domainKey, fakeItems);
-    console.log(`Digest stub: ${digest.summary}`);
+    console.log(`Synthesizing digest from ${collectedItems.length} item(s)...`);
+    const digest = await synthesizeDigest(domainKey, collectedItems, recentSummaries);
+
+    // M3: generate embedding for this digest and save it
+    console.log("Generating embedding...");
+    const embedding = await generateEmbedding(digest.summary);
+    await saveDigest(digest, embedding);
+
+    console.log(`Digest saved (embedding: ${embedding.length} dimensions). Summary:\n${digest.summary}`);
   }
 
   console.log("\n=== Signal worker — run complete ===");
