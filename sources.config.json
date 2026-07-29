@@ -20,8 +20,18 @@
     },
     "app-builders": {
       "label": "App Builders (low-code / vibe coding)",
-      "active": false,
-      "sources": []
+      "active": true,
+      "sources": [
+        { "name": "Bubble Blog", "type": "blog", "url": "https://bubble.io/blog" },
+        { "name": "Bubble Changelog", "type": "changelog", "url": "https://bubble.io/changelog" },
+        { "name": "FlutterFlow Blog", "type": "blog", "url": "https://www.flutterflow.io/blog" },
+        { "name": "Airtable Blog", "type": "blog", "url": "https://blog.airtable.com" },
+        { "name": "Retool Blog", "type": "blog", "url": "https://retool.com/blog" },
+        { "name": "Glide Blog", "type": "blog", "url": "https://www.glideapps.com/blog" },
+        { "name": "Lovable Blog", "type": "blog", "url": "https://lovable.dev/blog" },
+        { "name": "Replit Blog", "type": "blog", "url": "https://blog.replit.com" },
+        { "name": "Bolt.new Blog", "type": "blog", "url": "https://blog.stackblitz.com" }
+      ]
     }
   }
 }
