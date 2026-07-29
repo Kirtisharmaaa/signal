@@ -23,7 +23,7 @@
       "active": true,
       "sources": [
         { "name": "Bubble Blog", "type": "blog", "url": "https://bubble.io/blog" },
-        { "name": "Bubble Release Notes", "type": "changelog", "url": "https://bubble.io/release-notes" }
+        { "name": "Bubble Release Notes", "type": "changelog", "url": "https://bubble.io/release-notes" },
         { "name": "FlutterFlow Blog", "type": "blog", "url": "https://www.flutterflow.io/blog" },
         { "name": "Airtable Blog", "type": "blog", "url": "https://blog.airtable.com" },
         { "name": "Retool Blog", "type": "blog", "url": "https://retool.com/blog" },
