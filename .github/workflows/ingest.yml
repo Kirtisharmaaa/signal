@@ -3,7 +3,7 @@ name: Signal Ingestion Worker
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 */6 * * *"   # every 6 hours
+    - cron: "0 */6 * * *"
 
 jobs:
   ingest:
@@ -18,7 +18,7 @@ jobs:
 
       - run: npm ci
 
-     - run: npx tsx worker/ingest.ts
+      - run: npx tsx worker/ingest.ts
         env:
           NODE_OPTIONS: '--max-http-header-size=100000'
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
