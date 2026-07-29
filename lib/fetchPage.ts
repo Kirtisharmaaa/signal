@@ -22,7 +22,8 @@ export async function fetchPageAsItem(
     throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
   }
 
-  const html = await response.text();
+  //const html = await response.text();
+  const html = (await response.text()).replace(/\u0000/g, "");
   const contentHash = createHash("sha256").update(html).digest("hex");
 
   return {
