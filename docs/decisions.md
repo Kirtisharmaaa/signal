@@ -1,1 +1,39 @@
- f
+# Architecture decisions log
+Kept short and dated — one entry per real decision, not a diary.
+
+## 2026-07-03 — M0 scaffolded
+Stack: Next.js (TypeScript only, no Python) + Supabase (Postgres/pgvector) + GitHub Actions worker.
+Frontend and backend combined into one Next.js app — the request/response concept doesn't need two separate deployed services to be visible.
+Worker kept separate from the app — this is the one split that teaches something the app alone can't: a process that runs on its own schedule vs. one that waits for a request.
+Dropped `next/font/google` in favor of a system font stack — the sandbox used to build this couldn't reach Google Fonts, and removing the dependency entirely is simpler anyway (no build-time network call).
+Domains: page/screen builders (active first), form builders and app builders added later once the pipeline is proven on one domain.
+
+## 2026-07-03 — M1: raw ingestion
+`fetchPage.ts` kept separate from `lib/agent.ts` and `lib/db.ts` — fetching is a pure I/O concern, not AI logic or persistence logic. Each file has one job.
+Content hashing (`sha256` of raw HTML) used for idempotency — upsert on `(source_name, content_hash)` means re-running the worker on unchanged pages is a no-op.
+Reddit sources skipped — Reddit rate-limits unauthenticated requests and requires OAuth for reliable access. Not worth the dependency for now.
+
+## 2026-07-03 — M2: real synthesis
+Switched from Gemini (free tier) to Anthropic `claude-haiku-4-5-20251001` — Gemini hit org-policy quota blocks on a Zoho work account. Haiku is fast and cheap enough for both scheduled synthesis and on-demand chat.
+`stripHtml()` strips `<script>` and `<style>` block contents before removing tags — early version only stripped tags, leaving raw JavaScript in the text sent to Claude.
+
+## 2026-07-03 — M3: embeddings + memory
+Voyage AI `voyage-3` (1024 dims) chosen over OpenAI embeddings — keeps LLM calls (Anthropic) and embedding calls (Voyage) as separate vendor concerns, each independently swappable. Voyage has a generous free tier.
+Recent digests passed to Claude as context ("you already reported these — don't repeat") — without this, every run produced near-identical summaries.
+
+## 2026-07-03 — M4: chat
+`answerQuestion()` takes pre-fetched digests as a parameter rather than fetching them itself — the API route acts as orchestrator, keeping agent.ts and db.ts from importing each other (circular dependency).
+`match_digests` Postgres function used for vector search — Supabase JS client doesn't expose raw `<=>` cosine distance operators, so the query lives in a DB function called via `.rpc()`.
+Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.3 is loose enough to find relevant context without pulling in noise.
+
+## 2026-07-03 — M5: dashboard
+`app/page.tsx` is a Server Component that queries Supabase directly — no need for an API route when the data fetch happens at render time on the server.
+`Chat.tsx` extracted as a Client Component (`"use client"`) — chat needs `useState` for message history, which Server Components don't support. The split keeps the interactive part isolated.
+
+## 2026-07-24 — M6: GitHub Actions
+Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
+Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
+
+## 2026-07-29 — app-builders domain activated
+Added Bubble, FlutterFlow, Airtable, Retool, Glide, Lovable, Replit, Bolt.new as sources.
+Null bytes stripped from fetched HTML in `fetchPage.ts` — Lovable's blog contained `\u0000` characters that Postgres rejects during insert.
