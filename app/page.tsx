@@ -1,6 +1,20 @@
 import { getDigests } from "@/lib/db";
 import Chat from "./components/chat";
 
+function domainLabel(domain: string) {
+  const labels: Record<string, string> = {
+    "page-screen-builders": "Page Builders",
+    "app-builders": "App Builders",
+    "form-builders": "Form Builders",
+  };
+  return labels[domain] ?? domain;
+}
+
+function firstTwoSentences(text: string) {
+  const sentences = text.split(". ");
+  return sentences.slice(0, 2).join(". ") + ".";
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
@@ -16,51 +30,104 @@ function cleanSummary(text: string) {
 
 export default async function Home() {
   const digests = await getDigests(20);
+const insights = digests.slice(0, 3);
+const remaining = digests.slice(3);
+
+const byDomain = digests.reduce((acc, d) => {
+  acc[d.domain] = (acc[d.domain] ?? 0) + d.item_count;
+  return acc;
+}, {} as Record<string, number>);
+const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-100 px-8 py-5">
-        <h1 className="text-lg font-semibold tracking-tight">Signal</h1>
-        <p className="text-sm text-gray-500 mt-1">Product intelligence for builder tools</p>
-      </header>
+  <main className="max-w-2xl mx-auto px-6 py-16">
 
-      <main className="max-w-6xl mx-auto px-8 py-8 grid grid-cols-[1fr_380px] gap-10">
-        <section>
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-5">
-            Latest Digests
-          </h2>
-          {digests.length === 0 ? (
-            <p className="text-sm text-gray-400">No digests yet — run the worker to generate some.</p>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {digests.map((digest) => (
-                <article
-                  key={digest.id}
-                  className="border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                      {digest.domain}
-                    </span>
-                    <span className="text-xs text-gray-400">{formatDate(digest.generated_at)}</span>
-                    <span className="text-xs text-gray-400">· {digest.item_count} sources</span>
-                  </div>
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {cleanSummary(digest.summary)}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+    {/* Header */}
+    <header className="text-center mb-16">
+      <h1 className="text-2xl font-semibold tracking-widest uppercase mb-2">Signal</h1>
+      <p className="text-sm text-gray-500">Weekly Intelligence Brief</p>
+      <p className="text-xs text-gray-400 mt-1">{formatDate(new Date().toISOString())}</p>
+    </header>
 
-        <aside className="sticky top-8 self-start">
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-5">
-            Ask the agent
-          </h2>
-          <Chat />
-        </aside>
-      </main>
-    </div>
+    {/* Insights */}
+    <section className="mb-12">
+      <p className="text-xs text-gray-400 uppercase tracking-widest mb-8">3 things you should know this week</p>
+      <div className="flex flex-col">
+        {insights.map((digest, i) => (
+          <div key={digest.id} className="py-8 border-t border-gray-100">
+            <p className="text-xs text-gray-400 mb-3">{i + 1}.</p>
+            <p className="text-base text-gray-900 leading-relaxed mb-3">
+              {firstTwoSentences(cleanSummary(digest.summary))}
+            </p>
+            <p className="text-xs text-gray-400 mb-4">{digest.item_count} signals support this.</p>
+            <button className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors">
+              Explore
+            </button>
+          </div>
+        ))}
+        <div className="border-t border-gray-100" />
+      </div>
+    </section>
+
+    {/* Signal count strip */}
+    <section className="mb-12 py-6 border-t border-b border-gray-100">
+      <p className="text-sm text-gray-700 mb-2">{total} signals this week</p>
+      <p className="text-xs text-gray-400">
+        {Object.entries(byDomain).map(([domain, count], i) => (
+          <span key={domain}>
+            {i > 0 && " · "}+{count} {domainLabel(domain)}
+          </span>
+        ))}
+      </p>
+    </section>
+
+    {/* Trending Topics */}
+    <section className="mb-12">
+      <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Trending Topics</p>
+      <div className="flex flex-wrap gap-2">
+        {["MCP Support", "AI Generation", "Pricing Changes", "AI Agents", "Mobile Builders"].map((topic) => (
+          <button key={topic} className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-600 hover:border-gray-400 transition-colors">
+            {topic}
+          </button>
+        ))}
+      </div>
+    </section>
+
+    {/* Product Signals */}
+    <section className="mb-16">
+      <p className="text-xs text-gray-400 uppercase tracking-widest mb-6">Product Signals</p>
+      {Object.entries(
+        remaining.reduce((acc, d) => {
+          if (!acc[d.domain]) acc[d.domain] = [];
+          acc[d.domain].push(d);
+          return acc;
+        }, {} as Record<string, typeof remaining>)
+      ).map(([domain, items]) => (
+        <details key={domain} className="mb-4 border-t border-gray-100">
+          <summary className="flex justify-between items-center py-4 cursor-pointer list-none text-sm font-medium text-gray-700 hover:text-gray-900">
+            {domainLabel(domain)}
+            <span className="text-xs text-gray-400">+{items.length}</span>
+          </summary>
+          <div className="flex flex-col gap-4 pb-6">
+            {items.map((d) => (
+              <div key={d.id}>
+                <p className="text-xs text-gray-400 mb-1">{formatDate(d.generated_at)} · {d.item_count} sources</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{cleanSummary(d.summary)}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      ))}
+    </section>
+
+    {/* Ask Signal */}
+    <section>
+      <p className="text-xs text-gray-400 uppercase tracking-widest mb-6">Ask Signal</p>
+      <Chat />
+    </section>
+
+  </main>
+</div>
   );
 }

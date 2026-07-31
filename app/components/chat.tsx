@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 
+const suggestions = [
+  "what products support MCP?",
+  "which company is growing fastest?",
+  "compare lovable and bolt",
+  "summarize this month's trends",
+];
+
 export default function Chat() {
   const [message, setMessage] = useState("");
   const [answer, setAnswer] = useState("");
@@ -34,13 +41,24 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            onClick={() => setMessage(s)}
+            className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="e.g. what did Webflow ship recently?"
-          rows={4}
-          className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gray-300"
+          placeholder="ask anything about the builder tools space..."
+          rows={3}
+          className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-gray-300"
         />
         <button
           type="submit"
@@ -51,7 +69,7 @@ export default function Chat() {
         </button>
       </form>
       {answer && (
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm whitespace-pre-wrap leading-relaxed">
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 text-sm whitespace-pre-wrap leading-relaxed text-gray-700">
           {answer}
         </div>
       )}
