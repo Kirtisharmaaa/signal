@@ -111,3 +111,22 @@ export async function getDigests(limit: number = 20): Promise<{
   if (error) throw new Error(`Failed to fetch digests: ${error.message}`);
   return data ?? [];
 }
+export async function getDigestById(id: number): Promise<{
+  id: number;
+  domain: string;
+  summary: string;
+  item_count: number;
+  generated_at: string;
+  embedding: number[] | null;
+  feedback: boolean | null;
+} | null> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("id, domain, summary, item_count, generated_at, embedding, feedback")
+    .eq("id", id)
+    .single();
+
+  if (error) return null;
+  return data;
+}

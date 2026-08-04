@@ -34,6 +34,23 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI M2: signal detail view + feedback
+Signal detail view added at `app/digest/[id]/page.tsx` — dynamic Next.js route showing full summary, "Why it matters" placeholder, and related signals via existing vector search (`findSimilarDigests`).
+`params` must be awaited in Next.js 16 before reading `.id` — `{ params: Promise<{ id: string }> }` — caught as a 404 in testing.
+`getDigestById` added to `lib/db.ts` — fetches single digest by id including embedding and feedback columns.
+Thumbs up/down feedback added to detail page via `FeedbackButtons` Client Component — stores `boolean | null` in new `feedback` column on `digests` table. `NULL` = no feedback, `true` = up, `false` = down. Purpose: evidence base for M7 tuning — without real feedback, quality improvements are guesswork.
+Feedback API route at `app/api/feedback/route.ts` — POST endpoint, validates id (number) and value (boolean), writes to Supabase.
+Explore button on insight cards and product signal items on home page now link to `/digest/[id]`.
+
+## 2026-07-30 — UI rebuild: Weekly Intelligence Brief layout
+Replaced two-panel (digest feed + chat sidebar) layout with single-column Weekly Intelligence Brief per signal-ui-plan.md.
+Top 3 most recent digests surfaced as placeholder "insight" cards — real cross-domain synthesis (a new `synthesizeInsights()` function) not yet built; this gives the layout real content to test against until then.
+Signal count strip (total + per-domain breakdown) derived from `item_count` fields across all fetched digests.
+Trending Topics rendered as hardcoded chips — real topic extraction planned for M3 investigation view.
+Product Signals section groups remaining digests by domain using native `<details>/<summary>` for collapse — avoids converting `page.tsx` to a Client Component just for toggle state.
+Ask Signal moved from sidebar to inline bottom section; suggestion chips added to `chat.tsx` — clicking a chip pre-fills the textarea.
+Rejected patterns from the plan now enforced: no two-panel layout, no signal count as hero, no fullscreen chat, no sidebar navigation.
+
 ## 2026-07-29 — app-builders domain activated
 Added Bubble, FlutterFlow, Airtable, Retool, Glide, Lovable, Replit, Bolt.new as sources.
 Null bytes stripped from fetched HTML in `fetchPage.ts` — Lovable's blog contained `\u0000` characters that Postgres rejects during insert.

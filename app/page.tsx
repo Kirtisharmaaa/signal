@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDigests } from "@/lib/db";
 import Chat from "./components/chat";
 
@@ -61,9 +62,9 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
               {firstTwoSentences(cleanSummary(digest.summary))}
             </p>
             <p className="text-xs text-gray-400 mb-4">{digest.item_count} signals support this.</p>
-            <button className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors">
-              Explore
-            </button>
+            <Link href={`/digest/${digest.id}`} className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block">
+  Explore
+</Link>
           </div>
         ))}
         <div className="border-t border-gray-100" />
@@ -112,8 +113,12 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
           <div className="flex flex-col gap-4 pb-6">
             {items.map((d) => (
               <div key={d.id}>
-                <p className="text-xs text-gray-400 mb-1">{formatDate(d.generated_at)} · {d.item_count} sources</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{cleanSummary(d.summary)}</p>
+                <Link key={d.id} href={`/digest/${d.id}`} className="group block">
+  <p className="text-xs text-gray-400 mb-1">{formatDate(d.generated_at)} · {d.item_count} sources</p>
+  <p className="text-sm text-gray-600 leading-relaxed group-hover:text-gray-600 transition-colors">
+    {cleanSummary(d.summary)}
+  </p>
+</Link>
               </div>
             ))}
           </div>
