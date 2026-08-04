@@ -84,16 +84,26 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
     </section>
 
     {/* Trending Topics */}
-    <section className="mb-12">
-      <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Trending Topics</p>
-      <div className="flex flex-wrap gap-2">
-        {["MCP Support", "AI Generation", "Pricing Changes", "AI Agents", "Mobile Builders"].map((topic) => (
-          <button key={topic} className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-600 hover:border-gray-400 transition-colors">
-            {topic}
-          </button>
-        ))}
-      </div>
-    </section>
+<section className="mb-12">
+  <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Trending Topics</p>
+  <div className="flex flex-wrap gap-2">
+    {[
+      { label: "MCP Support", keyword: "MCP" },
+      { label: "AI Generation", keyword: "AI" },
+      { label: "Pricing Changes", keyword: "pricing" },
+      { label: "AI Agents", keyword: "agent" },
+      { label: "Mobile Builders", keyword: "mobile" },
+    ].map(({ label, keyword }) => (
+      <Link
+        key={label}
+        href={`/investigate?topic=${encodeURIComponent(keyword)}&label=${encodeURIComponent(label)}&range=30d`}
+        className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-600 hover:border-gray-400 transition-colors"
+      >
+        {label}
+      </Link>
+    ))}
+  </div>
+</section>
 
     {/* Product Signals */}
     <section className="mb-16">

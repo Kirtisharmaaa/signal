@@ -130,3 +130,25 @@ export async function getDigestById(id: number): Promise<{
   if (error) return null;
   return data;
 }
+export async function getDigestsByDateRange(
+  range: "7d" | "30d" | "90d" | "1yr",
+  topic?: string
+): Promise<{ id: number; domain: string; summary: string; item_count: number; generated_at: string }[]> {
+  const days = { "7d": 7, "30d": 30, "90d": 90, "1yr": 365 }[range];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const db = getDb();
+  let query = db
+    .from("digests")
+    .select("id, domain, summary, item_count, generated_at")
+    .gte("generated_at", since)
+    .order("generated_at", { ascending: false });
+
+  if (topic) {
+    query = query.ilike("summary", `%${topic}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Failed to fetch digests: ${error.message}`);
+  return data ?? [];
+}
