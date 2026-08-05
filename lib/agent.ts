@@ -107,9 +107,67 @@ ${sourceTexts}`;
   };
 }
 
+export interface Insight {
+  headline: string;
+  signalCount: number;
+  topic: string;
+  domains: string[];
+}
+
 /**
- * M4 stub: decides whether to answer from stored digests or fetch something fresh.
+ * Synthesizes 3 cross-domain insights from recent digests.
+ * Unlike synthesizeDigest() which summarizes one domain, this reads across
+ * all domains and identifies patterns, trends, and cross-product conclusions.
  */
+export async function synthesizeInsights(
+  digests: { domain: string; summary: string; item_count: number; generated_at: string }[]
+): Promise<Insight[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
+
+  const client = new Anthropic({ apiKey });
+
+  const context = digests
+    .map((d) => `[${d.domain} — ${new Date(d.generated_at).toDateString()} — ${d.item_count} signals]\n${d.summary}`)
+    .join("\n\n");
+
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 1024,
+    messages: [{
+      role: "user",
+      content: `You are a product intelligence analyst tracking page builders, app builders, and form builders.
+
+Below are recent digest summaries from multiple domains. Identify the 3 most important cross-domain insights — patterns, trends, or developments that a PM or founder should know about this week. Prioritize findings that span multiple products or domains over single-product updates.
+
+For each insight write:
+- A 1-2 sentence headline capturing the key finding
+- Which domains it applies to
+- A short topic keyword (1-3 words, e.g. "MCP adoption", "AI pricing", "mobile builders")
+- An estimated signal count supporting it
+
+Return ONLY a JSON array, no other text:
+[
+  { "headline": "...", "domains": ["..."], "topic": "...", "signalCount": N },
+  { "headline": "...", "domains": ["..."], "topic": "...", "signalCount": N },
+  { "headline": "...", "domains": ["..."], "topic": "...", "signalCount": N }
+]
+
+Digests:
+${context}`,
+    }],
+  });
+
+  const text = message.content[0].type === "text" ? message.content[0].text : "[]";
+
+  try {
+    const parsed = JSON.parse(text.trim());
+    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * M4: answers a question using relevant past digests as context.
  * The caller (API route) is responsible for fetching the relevant digests

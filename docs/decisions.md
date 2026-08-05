@@ -34,6 +34,11 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI M6+: Source Health strip + Trend Timeline
+Source Health strip added as collapsed `<details>` at top of home page — shows green/yellow/red dot per domain based on age of most recent digest (green < 12h, yellow 12–48h, red > 48h). Uses `digests.generated_at` per domain as proxy since `raw_items` has no `last_fetched_at` column (upsert with `ignoreDuplicates: true` means `created_at` only reflects first-seen, not last-fetched).
+`getSourceHealth()` added to `lib/db.ts` — fetches all digests ordered by date, deduplicates to one row per domain in JS.
+Trend Timeline at `app/timeline/page.tsx` — groups digests by week using `startOfWeek()` in JS, renders stacked CSS bar chart per domain. No chart library needed. `getDigestTimeline()` added to `lib/db.ts`. Per-domain totals with percentage bars shown below the chart. Timeline link added to home page nav.
+
 ## 2026-08-04 — UI: react-markdown for digest rendering
 Replaced all string-splitting (`cleanSummary`, `parseSummary`, `BulletList`) with `react-markdown` + `remark-gfm`. Root cause of every formatting issue: digests are stored as markdown but we were stripping it instead of rendering it. `DigestSummary` component in `app/components/digest-summary.tsx` is now the single renderer used across home page, investigation view, and detail page. Investigation page widened to `max-w-4xl`; digest cards use `<article>` with "Open digest →" link instead of wrapping the whole content in a `<Link>`.
 

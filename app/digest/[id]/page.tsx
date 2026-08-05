@@ -19,10 +19,6 @@ function domainLabel(domain: string) {
   return labels[domain] ?? domain;
 }
 
-function cleanSummary(text: string) {
-  return text.replace(/^#+\s+/gm, "").replace(/\*\*(.*?)\*\*/g, "$1").trim();
-}
-
 export default async function DigestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await params;
   const id = parseInt(rawId);
@@ -34,8 +30,6 @@ export default async function DigestPage({ params }: { params: Promise<{ id: str
   const related = digest.embedding
     ? (await findSimilarDigests(digest.embedding, 4)).filter((d) => d.id !== id)
     : [];
-
-  const summary = cleanSummary(digest.summary);
 
   return (
     <div className="min-h-screen bg-white">
@@ -54,7 +48,7 @@ export default async function DigestPage({ params }: { params: Promise<{ id: str
         </div>
         <FeedbackButtons id={digest.id} initial={digest.feedback ?? null} />
 
-        <section className="mb-12">
+        <section className="mb-12 mt-8">
           <p className="text-sm text-gray-400 uppercase tracking-widest mb-4">Summary</p>
           <DigestSummary summary={digest.summary} />
         </section>
@@ -69,14 +63,17 @@ export default async function DigestPage({ params }: { params: Promise<{ id: str
         {related.length > 0 && (
           <section className="border-t border-gray-100 pt-10">
             <p className="text-sm text-gray-400 uppercase tracking-widest mb-6">Related signals</p>
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-8">
               {related.map((r) => (
-                <Link key={r.id} href={`/digest/${r.id}`} className="group">
-                  <p className="text-xs text-gray-400 mb-1">{domainLabel(r.domain)} · {formatDate(r.generated_at)}</p>
-                  <p className="text-sm text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors">
-                    {cleanSummary(r.summary).slice(0, 180)}…
-                  </p>
-                </Link>
+                <article key={r.id} className="border-t border-gray-100 pt-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-gray-400">{domainLabel(r.domain)} · {formatDate(r.generated_at)}</p>
+                    <Link href={`/digest/${r.id}`} className="text-xs text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+                      Open digest →
+                    </Link>
+                  </div>
+                  <DigestSummary summary={r.summary} />
+                </article>
               ))}
             </div>
           </section>

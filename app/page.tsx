@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { getDigests, getSourceHealth } from "@/lib/db";
+import { unstable_cache } from "next/cache";
+import { getDigests, getSourceHealth, getDigestsByDateRange } from "@/lib/db";
+import { synthesizeInsights, type Insight } from "@/lib/agent";
 import Chat from "./components/chat";
 import SaveButton from "./components/save-button";
 import DigestSummary from "./components/digest-summary";
@@ -19,10 +21,22 @@ function formatDate(iso: string) {
   });
 }
 
+const getCachedInsights = unstable_cache(
+  async () => {
+    const recent = await getDigestsByDateRange("30d");
+    if (recent.length === 0) return [] as Insight[];
+    return synthesizeInsights(recent);
+  },
+  ["weekly-insights"],
+  { revalidate: 6 * 60 * 60 }
+);
+
 export default async function Home() {
-  const [digests, sourceHealth] = await Promise.all([
+
+  const [digests, sourceHealth, aiInsights] = await Promise.all([
     getDigests(20),
     getSourceHealth(),
+    getCachedInsights().catch(() => [] as Insight[]),
   ]);
   const insights = digests.slice(0, 3);
   const remaining = digests.slice(3);
@@ -87,21 +101,39 @@ export default async function Home() {
         <section className="mb-12">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-8">3 things you should know this week</p>
           <div className="flex flex-col">
-            {insights.map((digest, i) => (
-              <div key={digest.id} className="py-8 border-t border-gray-100">
-                <p className="text-xs text-gray-400 mb-3">{i + 1}.</p>
-                <div className="mb-3">
-                  <DigestSummary summary={digest.summary} />
-                </div>
-                <p className="text-xs text-gray-400 mb-4">{digest.item_count} signals support this.</p>
-                <div className="flex gap-2">
-                  <Link href={`/digest/${digest.id}`} className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block">
+            {aiInsights.length > 0 ? (
+              aiInsights.map((insight, i) => (
+                <div key={i} className="py-8 border-t border-gray-100">
+                  <p className="text-xs text-gray-400 mb-3">{i + 1}.</p>
+                  <p className="text-base text-gray-900 leading-relaxed mb-2">{insight.headline}</p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    {insight.signalCount} signals · {insight.domains.map(domainLabel).join(", ")}
+                  </p>
+                  <Link
+                    href={`/investigate?topic=${encodeURIComponent(insight.topic)}&label=${encodeURIComponent(insight.topic)}&range=7d`}
+                    className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block"
+                  >
                     Explore
                   </Link>
-                  <SaveButton id={digest.id} initial={digest.saved ?? false} />
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              insights.map((digest, i) => (
+                <div key={digest.id} className="py-8 border-t border-gray-100">
+                  <p className="text-xs text-gray-400 mb-3">{i + 1}.</p>
+                  <div className="mb-3">
+                    <DigestSummary summary={digest.summary} />
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">{digest.item_count} signals support this.</p>
+                  <div className="flex gap-2">
+                    <Link href={`/digest/${digest.id}`} className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block">
+                      Explore
+                    </Link>
+                    <SaveButton id={digest.id} initial={digest.saved ?? false} />
+                  </div>
+                </div>
+              ))
+            )}
             <div className="border-t border-gray-100" />
           </div>
         </section>

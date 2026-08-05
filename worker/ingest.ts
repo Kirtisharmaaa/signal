@@ -26,6 +26,7 @@ async function main() {
 
     const fetchableSources = domain.sources.filter((s) => s.type !== "reddit");
     const collectedItems: FetchedItem[] = [];
+    let totalNewItems = 0;
 
     for (const source of fetchableSources) {
       console.log(`Fetching ${source.name}...`);
@@ -33,6 +34,7 @@ async function main() {
         const item = await fetchPageAsItem(source.url, domainKey, source.name);
         const result = await saveItems([item]);
         console.log(`  -> saved ${result.inserted} new (0 means unchanged since last run)`);
+        totalNewItems += result.inserted;
         collectedItems.push(item);
       } catch (err) {
         console.error(`  -> failed: ${err instanceof Error ? err.message : err}`);
@@ -45,6 +47,11 @@ async function main() {
       console.log(`(${skippedReddit} Reddit source(s) skipped — see decisions.md)`);
     }
 
+    if (totalNewItems === 0) {
+      console.log(`No new content for ${domainKey} — skipping digest synthesis.`);
+      continue;
+    }
+
     // M3: load past digests so Claude doesn't repeat itself
     const recentDigests = await getRecentDigests(domainKey, 3);
     const recentSummaries = recentDigests.map((d) => d.summary);
@@ -52,7 +59,7 @@ async function main() {
       console.log(`Memory: found ${recentSummaries.length} past digest(s) to pass as context`);
     }
 
-    console.log(`Synthesizing digest from ${collectedItems.length} item(s)...`);
+    console.log(`Synthesizing digest from ${collectedItems.length} item(s) (${totalNewItems} new)...`);
     const digest = await synthesizeDigest(domainKey, collectedItems, recentSummaries);
 
     // M3: generate embedding for this digest and save it
