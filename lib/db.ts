@@ -145,6 +145,45 @@ export async function getDigestsByKeyword(
   return data ?? [];
 }
 
+export async function getSourceHealth(): Promise<{
+  domain: string;
+  last_run: string;
+}[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("domain, generated_at")
+    .order("generated_at", { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch source health: ${error.message}`);
+
+  // Keep only the most recent digest per domain
+  const seen = new Set<string>();
+  const result: { domain: string; last_run: string }[] = [];
+  for (const row of data ?? []) {
+    if (!seen.has(row.domain)) {
+      seen.add(row.domain);
+      result.push({ domain: row.domain, last_run: row.generated_at });
+    }
+  }
+  return result;
+}
+
+export async function getDigestTimeline(): Promise<{
+  domain: string;
+  generated_at: string;
+  item_count: number;
+}[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("domain, generated_at, item_count")
+    .order("generated_at", { ascending: true });
+
+  if (error) throw new Error(`Failed to fetch timeline: ${error.message}`);
+  return data ?? [];
+}
+
 export async function getSavedDigests(): Promise<{
   id: number;
   domain: string;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDigests } from "@/lib/db";
+import { getDigests, getSourceHealth } from "@/lib/db";
 import Chat from "./components/chat";
 import SaveButton from "./components/save-button";
 import DigestSummary from "./components/digest-summary";
@@ -20,7 +20,10 @@ function formatDate(iso: string) {
 }
 
 export default async function Home() {
-  const digests = await getDigests(20);
+  const [digests, sourceHealth] = await Promise.all([
+    getDigests(20),
+    getSourceHealth(),
+  ]);
   const insights = digests.slice(0, 3);
   const remaining = digests.slice(3);
 
@@ -34,6 +37,40 @@ export default async function Home() {
     <div className="min-h-screen bg-white">
       <main className="max-w-2xl mx-auto px-6 py-16">
 
+        {/* Source Health Strip */}
+        {(() => {
+          const now = Date.now();
+          return (
+            <details className="mb-8 text-xs">
+              <summary className="cursor-pointer list-none flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors">
+                <span>Source Health</span>
+                <div className="flex gap-1">
+                  {sourceHealth.map((s) => {
+                    const age = (now - new Date(s.last_run).getTime()) / (1000 * 60 * 60);
+                    const color = age < 12 ? "bg-green-400" : age < 48 ? "bg-yellow-400" : "bg-red-400";
+                    return <span key={s.domain} className={`w-2 h-2 rounded-full ${color} inline-block`} />;
+                  })}
+                </div>
+              </summary>
+              <div className="mt-3 flex flex-col gap-2 pl-1">
+                {sourceHealth.map((s) => {
+                  const age = (now - new Date(s.last_run).getTime()) / (1000 * 60 * 60);
+                  const color = age < 12 ? "text-green-600" : age < 48 ? "text-yellow-600" : "text-red-600";
+                  const label = age < 12 ? "healthy" : age < 48 ? "stale" : "failed";
+                  const hoursAgo = age < 1 ? "< 1h ago" : `${Math.round(age)}h ago`;
+                  return (
+                    <div key={s.domain} className="flex items-center gap-2">
+                      <span className="text-gray-500">{domainLabel(s.domain)}</span>
+                      <span className={`${color} font-medium`}>{label}</span>
+                      <span className="text-gray-400">{hoursAgo}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })()}
+
         {/* Header */}
         <header className="text-center mb-16">
           <h1 className="text-2xl font-semibold tracking-widest uppercase mb-2">Signal</h1>
@@ -42,6 +79,7 @@ export default async function Home() {
           <div className="flex justify-center gap-4 mt-4">
             <Link href="/products" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Products</Link>
             <Link href="/history" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">History</Link>
+            <Link href="/timeline" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Timeline</Link>
           </div>
         </header>
 
