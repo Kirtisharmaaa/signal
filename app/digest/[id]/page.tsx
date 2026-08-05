@@ -2,6 +2,7 @@ import { getDigestById, findSimilarDigests } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FeedbackButtons from "@/app/components/feedback-buttons";
+import DigestSummary from "@/app/components/digest-summary";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -55,7 +56,7 @@ export default async function DigestPage({ params }: { params: Promise<{ id: str
 
         <section className="mb-12">
           <p className="text-sm text-gray-400 uppercase tracking-widest mb-4">Summary</p>
-          <p className="text-base text-gray-800 leading-relaxed">{summary}</p>
+          <DigestSummary summary={digest.summary} />
         </section>
 
         <section className="mb-12 border-t border-gray-100 pt-10">

@@ -1,5 +1,6 @@
 import { getDigestsByDateRange } from "@/lib/db";
 import Link from "next/link";
+import DigestSummary from "@/app/components/digest-summary";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -18,10 +19,6 @@ function domainLabel(domain: string) {
     "form-builders": "Form Builders",
   };
   return labels[domain] ?? domain;
-}
-
-function cleanSummary(text: string) {
-  return text.replace(/^#+\s+/gm, "").replace(/\*\*(.*?)\*\*/g, "$1").trim();
 }
 
 const RANGES = ["7d", "30d", "90d", "1yr"] as const;
@@ -44,7 +41,6 @@ export default async function InvestigatePage({
 
   const digests = await getDigestsByDateRange(range, topic);
 
-  // Group digests by month
   const byMonth = digests.reduce((acc, d) => {
     const month = formatMonth(d.generated_at);
     if (!acc[month]) acc[month] = [];
@@ -57,7 +53,7 @@ export default async function InvestigatePage({
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="max-w-2xl mx-auto px-6 py-16">
+      <main className="mx-auto max-w-4xl px-6 py-14 sm:px-8 lg:px-10">
 
         <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors mb-12 inline-block">
           ← Back
@@ -96,23 +92,33 @@ export default async function InvestigatePage({
 
         {/* Timeline */}
         {digests.length === 0 ? (
-          <p className="text-sm text-gray-400">No signals found for this topic and time range.</p>
+          <p className="text-sm text-slate-400">No signals found for this topic and time range.</p>
         ) : (
           <div className="flex flex-col">
             {Object.entries(byMonth).map(([month, items]) => (
-              <div key={month} className="mb-10">
-                <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">{month}</p>
-                <div className="flex flex-col gap-6">
+              <section key={month} className="mb-14">
+                <p className="mb-5 text-xs font-medium uppercase tracking-widest text-slate-400">
+                  {month}
+                </p>
+                <div className="flex flex-col gap-10">
                   {items.map((d) => (
-                    <Link key={d.id} href={`/digest/${d.id}`} className="group border-t border-gray-100 pt-4">
-                      <p className="text-xs text-gray-400 mb-1">{domainLabel(d.domain)} · {formatDate(d.generated_at)}</p>
-                      <p className="text-sm text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors">
-                        {cleanSummary(d.summary).slice(0, 200)}…
-                      </p>
-                    </Link>
+                    <article key={d.id} className="border-t border-slate-200 pt-6">
+                      <div className="mb-4 flex items-center justify-between gap-4">
+                        <p className="text-xs font-medium uppercase tracking-widest text-slate-400">
+                          {domainLabel(d.domain)} · {formatDate(d.generated_at)}
+                        </p>
+                        <Link
+                          href={`/digest/${d.id}`}
+                          className="shrink-0 text-xs text-slate-400 transition-colors hover:text-slate-700"
+                        >
+                          Open digest →
+                        </Link>
+                      </div>
+                      <DigestSummary summary={d.summary} />
+                    </article>
                   ))}
                 </div>
-              </div>
+              </section>
             ))}
           </div>
         )}

@@ -34,6 +34,9 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI: react-markdown for digest rendering
+Replaced all string-splitting (`cleanSummary`, `parseSummary`, `BulletList`) with `react-markdown` + `remark-gfm`. Root cause of every formatting issue: digests are stored as markdown but we were stripping it instead of rendering it. `DigestSummary` component in `app/components/digest-summary.tsx` is now the single renderer used across home page, investigation view, and detail page. Investigation page widened to `max-w-4xl`; digest cards use `<article>` with "Open digest →" link instead of wrapping the whole content in a `<Link>`.
+
 ## 2026-08-04 — UI M5: History view
 `chat_history` table added to Supabase — stores question, answer, range, and created_at per Ask Signal query.
 `saveChatHistory()`, `getChatHistory()`, `getSavedDigests()` added to `lib/db.ts`. Chat API route now calls `saveChatHistory()` after every successful answer.
