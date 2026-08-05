@@ -145,6 +145,55 @@ export async function getDigestsByKeyword(
   return data ?? [];
 }
 
+export async function getSavedDigests(): Promise<{
+  id: number;
+  domain: string;
+  summary: string;
+  item_count: number;
+  generated_at: string;
+}[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("id, domain, summary, item_count, generated_at")
+    .eq("saved", true)
+    .order("generated_at", { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch saved digests: ${error.message}`);
+  return data ?? [];
+}
+
+export async function saveChatHistory(
+  question: string,
+  answer: string,
+  range: string
+): Promise<void> {
+  const db = getDb();
+  const { error } = await db
+    .from("chat_history")
+    .insert({ question, answer, range });
+
+  if (error) throw new Error(`Failed to save chat history: ${error.message}`);
+}
+
+export async function getChatHistory(limit: number = 20): Promise<{
+  id: number;
+  question: string;
+  answer: string;
+  range: string;
+  created_at: string;
+}[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("chat_history")
+    .select("id, question, answer, range, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`Failed to fetch chat history: ${error.message}`);
+  return data ?? [];
+}
+
 export async function getDigestsByDateRange(
   range: "7d" | "30d" | "90d" | "1yr",
   topic?: string

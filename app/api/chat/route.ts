@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding, answerQuestion } from "@/lib/agent";
-import { findSimilarDigests, getDigestsByDateRange } from "@/lib/db";
+import { findSimilarDigests, getDigestsByDateRange, saveChatHistory } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const answer = await answerQuestion(message, relevantDigests);
+    await saveChatHistory(message, answer, range ?? "all");
     return NextResponse.json({ answer });
   } catch (err) {
     console.error("Chat API error:", err);

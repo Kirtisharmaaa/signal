@@ -50,6 +50,10 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
       <h1 className="text-2xl font-semibold tracking-widest uppercase mb-2">Signal</h1>
       <p className="text-sm text-gray-500">Weekly Intelligence Brief</p>
       <p className="text-xs text-gray-400 mt-1">{formatDate(new Date().toISOString())}</p>
+      <div className="flex justify-center gap-4 mt-4">
+        <Link href="/products" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Products</Link>
+        <Link href="/history" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">History</Link>
+      </div>
     </header>
 
     {/* Insights */}

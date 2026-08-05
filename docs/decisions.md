@@ -34,6 +34,12 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI M5: History view
+`chat_history` table added to Supabase — stores question, answer, range, and created_at per Ask Signal query.
+`saveChatHistory()`, `getChatHistory()`, `getSavedDigests()` added to `lib/db.ts`. Chat API route now calls `saveChatHistory()` after every successful answer.
+History page at `app/history/page.tsx` — two sections: Saved Insights (digests with `saved = true`) and Past Questions (chat_history entries, most recent first, answer truncated to 300 chars).
+Products and History nav links added to home page header.
+
 ## 2026-08-04 — UI M4-M5: Product Profiles
 `lib/products.ts` added as single source of truth for tracked products — name, slug, domain, and search keyword. Slug is URL-safe (e.g. "bolt-new"), keyword is what gets searched in digest summaries (e.g. "Bolt"). Kept separate from `sources.config.json` — that file drives the worker, this drives the UI.
 `getDigestsByKeyword()` added to `lib/db.ts` — searches all digests by keyword with no date filter. Reuses `.ilike` pattern from `getDigestsByDateRange`.
