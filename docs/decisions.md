@@ -34,6 +34,13 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI M3: investigation view + trending topic pages
+Time-based investigation view added at `app/investigate/page.tsx` — reads `topic`, `label`, and `range` from URL search params. Filters digests by date range using `.gte` on `generated_at` and `.ilike` on summary for keyword search.
+`getDigestsByDateRange(range, topic?)` added to `lib/db.ts` — calculates start date from range string (7d/30d/90d/1yr), queries Supabase with optional case-insensitive keyword filter.
+Trending topic chips on home page changed from dead buttons to `<Link>` components. Each chip passes two URL params: `keyword` (short search term like "AI") and `label` (display name like "AI Generation") — split because `.ilike` needs short terms to match real digest text, but the heading should show the friendly label.
+`label` param preserved when switching time ranges so the heading stays correct across navigation.
+In Next.js 16, `searchParams` is a Promise and must be awaited — same pattern as `params` in dynamic routes.
+
 ## 2026-08-04 — UI M2: signal detail view + feedback
 Signal detail view added at `app/digest/[id]/page.tsx` — dynamic Next.js route showing full summary, "Why it matters" placeholder, and related signals via existing vector search (`findSimilarDigests`).
 `params` must be awaited in Next.js 16 before reading `.id` — `{ params: Promise<{ id: string }> }` — caught as a 404 in testing.

@@ -14,6 +14,7 @@ export default function Chat() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [range, setRange] = useState<string>("all");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,7 +28,7 @@ export default function Chat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, range }),
       });
       const data = await res.json();
       if (!res.ok) setError(data.error || "Something went wrong");
@@ -49,6 +50,27 @@ export default function Chat() {
             className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors"
           >
             {s}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        {[
+          { label: "All time", value: "all" },
+          { label: "Last 7 days", value: "7d" },
+          { label: "Last 30 days", value: "30d" },
+          { label: "Last 90 days", value: "90d" },
+        ].map(({ label, value }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setRange(value)}
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+              range === value
+                ? "border-gray-400 text-gray-700 bg-gray-100"
+                : "border-gray-200 text-gray-400 hover:border-gray-400"
+            }`}
+          >
+            {label}
           </button>
         ))}
       </div>
