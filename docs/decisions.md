@@ -34,6 +34,16 @@ Similarity threshold set to 0.3 — 0.5 returned no results in early testing; 0.
 Node 22 pinned in the workflow — Supabase JS client v2+ requires native WebSocket support, absent in Node 20. Node 20 caused silent DB connection failures with no useful error.
 Worker invoked as `npx tsx worker/ingest.ts` directly — earlier `npm run worker` used `--env-file=.env.local` which doesn't exist on GitHub's runners.
 
+## 2026-08-04 — UI M4 part 2: Save Insight
+Star button added to each insight card on the home page — toggles `saved` boolean on the `digests` table in Supabase. `☆ Save` / `★ Saved` visual state managed in `SaveButton` Client Component. API route at `app/api/save/route.ts` follows same pattern as feedback route.
+`getDigests()` updated to select `saved` column. Purpose: bookmarked digests are the data layer for the History view in M5.
+
+## 2026-08-04 — UI M4 part 1: Ask Signal time-range support
+Time range selector added to `chat.tsx` — four options (All time, Last 7 days, Last 30 days, Last 90 days), stored in component state, passed in POST body alongside the message.
+Chat API route updated to branch on range: if range is set and not "all", uses `getDigestsByDateRange` instead of vector search — date context matters more than semantic similarity for time-scoped questions. If "all", keeps existing embedding + `findSimilarDigests` flow.
+`similarity: 1` passed as placeholder for date-ranged digests — `answerQuestion` expects that field; no semantic score exists for date-filtered results so 1 (fully relevant) is used to keep the shape consistent without changing `agent.ts`.
+ANTHROPIC_API_KEY was invalid in `.env.local`, Vercel, and GitHub Actions — regenerated and updated in all three places.
+
 ## 2026-08-04 — UI M3: investigation view + trending topic pages
 Time-based investigation view added at `app/investigate/page.tsx` — reads `topic`, `label`, and `range` from URL search params. Filters digests by date range using `.gte` on `generated_at` and `.ilike` on summary for keyword search.
 `getDigestsByDateRange(range, topic?)` added to `lib/db.ts` — calculates start date from range string (7d/30d/90d/1yr), queries Supabase with optional case-insensitive keyword filter.

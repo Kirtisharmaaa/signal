@@ -100,11 +100,12 @@ export async function getDigests(limit: number = 20): Promise<{
   summary: string;
   item_count: number;
   generated_at: string;
+  saved: boolean;
 }[]> {
   const db = getDb();
   const { data, error } = await db
     .from("digests")
-    .select("id, domain, summary, item_count, generated_at")
+    .select("id, domain, summary, item_count, generated_at, saved")
     .order("generated_at", { ascending: false })
     .limit(limit);
 

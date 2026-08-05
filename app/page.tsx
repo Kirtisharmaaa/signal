@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDigests } from "@/lib/db";
 import Chat from "./components/chat";
+import SaveButton from "./components/save-button";
 
 function domainLabel(domain: string) {
   const labels: Record<string, string> = {
@@ -62,9 +63,12 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
               {firstTwoSentences(cleanSummary(digest.summary))}
             </p>
             <p className="text-xs text-gray-400 mb-4">{digest.item_count} signals support this.</p>
-            <Link href={`/digest/${digest.id}`} className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block">
-  Explore
-</Link>
+            <div className="flex gap-2">
+              <Link href={`/digest/${digest.id}`} className="text-xs text-gray-500 border border-gray-200 rounded px-3 py-1 hover:border-gray-400 transition-colors inline-block">
+                Explore
+              </Link>
+              <SaveButton id={digest.id} initial={digest.saved ?? false} />
+            </div>
           </div>
         ))}
         <div className="border-t border-gray-100" />
