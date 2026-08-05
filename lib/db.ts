@@ -131,6 +131,20 @@ export async function getDigestById(id: number): Promise<{
   if (error) return null;
   return data;
 }
+export async function getDigestsByKeyword(
+  keyword: string
+): Promise<{ id: number; domain: string; summary: string; item_count: number; generated_at: string }[]> {
+  const db = getDb();
+  const { data, error } = await db
+    .from("digests")
+    .select("id, domain, summary, item_count, generated_at")
+    .ilike("summary", `%${keyword}%`)
+    .order("generated_at", { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch digests: ${error.message}`);
+  return data ?? [];
+}
+
 export async function getDigestsByDateRange(
   range: "7d" | "30d" | "90d" | "1yr",
   topic?: string

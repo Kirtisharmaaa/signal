@@ -87,6 +87,13 @@ const total = Object.values(byDomain).reduce((a, b) => a + b, 0);
       </p>
     </section>
 
+    {/* Product Profiles link */}
+    <div className="mb-12 flex justify-end">
+      <Link href="/products" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        View product profiles →
+      </Link>
+    </div>
+
     {/* Trending Topics */}
 <section className="mb-12">
   <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Trending Topics</p>
